@@ -1,0 +1,19 @@
+#pragma kernel CalTransparentAreaByGPU
+
+Texture2D<float4> inputTexture;
+
+RWStructuredBuffer<uint> outputBuffer;
+
+uint width, height;
+
+[numthreads(8, 8, 1)]
+void CalTransparentAreaByGPU(uint3 id : SV_DispatchThreadID)
+{
+    uint2 pixelCoord = id.xy;
+    if (pixelCoord.x >= width || pixelCoord.y >= height)
+        return;
+    float4 pixel = inputTexture[pixelCoord];
+    float value = step(0.001f, pixel.a);
+    uint transparentCount = uint(1 - value);
+    InterlockedAdd(outputBuffer[0], transparentCount);
+}
